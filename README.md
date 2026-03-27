@@ -46,6 +46,49 @@ from aa_caller import SamContainer, FullReference, parse_amplicons
 
 The `SamContainer` constructor still accepts `ratio_upper`, `ratio_lower`, and `entropy_threshold` so you can reuse the balancing logic in scripts.
 
+### Python wrapper
+
+Use `call_variants` to run the full pipeline from Python without touching the CLI. It validates the inputs, builds the `SamContainer`, and writes the TSV/XML artifacts while returning a `VariantCallResult` you can inspect.
+
+```python
+from pathlib import Path
+
+from aa_caller import call_variants
+
+result = call_variants(
+	sam_path=Path("reads.sam"),
+	reference_path=Path("reference.fasta"),
+	amplicons_path=Path("amps.tsv"),
+	ratio_upper=3.2,
+)
+
+print(result.csv_path, result.xml_path)
+print(result.container.variants.keys())
+```
+
+If you already have an `argparse.Namespace` or mapping of the CLI arguments, `call_variants_from_args` adapts them directly.
+
+```python
+from argparse import Namespace
+
+args = Namespace(
+	sam_file="reads.sam",
+	reference_file="reference.fasta",
+	amplicons_file="amps.tsv",
+	ratio_upper=3.2,
+)
+
+call_variants_from_args(args)
+```
+
+### CLI wrapper
+
+This repository installs a lightweight runner at `codonyat-runner` that exposes the same entry arguments as `call_variants_from_args`. Use it when you prefer a small CLI shim over the full `codonyat` entry point:
+
+```bash
+codonyat-runner reads.sam reference.fasta amps.tsv --ratio-upper 3.1 --csv-path results.tsv
+```
+
 ## Development
 
 Install the repository with the optional dev tooling so your local environment matches CI:

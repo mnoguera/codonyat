@@ -23,6 +23,7 @@ classifiers = [
 
 [project.scripts]
 codonyat = "aa_caller.app:main"
+codonyat-runner = "aa_caller.runner:runner_cli"
 
 [project.optional-dependencies]
 dev = [
