@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>aa-caller | RNA-guided variant calling</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Source Sans 3", "Inter", system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      background-color: #0b0f14;
+      color: #e4e4f5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #161b27, #05060a);
+      display: flex;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    main {
+      width: min(1100px, 100%);
+    }
+
+    .card {
+      background: rgba(7, 11, 18, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(16px);
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
+      margin: 0 0 0.4rem;
+    }
+
+    h2 {
+      margin-top: 2rem;
+      margin-bottom: 0.4rem;
+      font-size: 1.4rem;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      color: rgba(228, 228, 245, 0.85);
+    }
+
+    .hero-meta {
+      color: #94d2ff;
+      letter-spacing: 0.08em;
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+    }
+
+    .rows {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 0.2rem 0.9rem;
+      font-size: 0.75rem;
+      background: linear-gradient(120deg, #5af3c1, #33b1ff);
+      color: #041013;
+      margin-right: 0.3rem;
+      display: inline-block;
+    }
+
+    code,
+    pre {
+      background: #041013;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.95rem;
+    }
+
+    pre {
+      overflow-x: auto;
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      margin: 0 0 1rem;
+    }
+
+    li + li {
+      margin-top: 0.35rem;
+    }
+
+    a {
+      color: #7fe2ff;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(127, 226, 255, 0.5);
+    }
+
+    footer {
+      text-align: center;
+      color: rgba(228, 228, 245, 0.65);
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 620px) {
+      body {
+        padding: 1.5rem 1rem 3rem;
+      }
+
+      .card {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <p class="hero-meta">aa-caller · RNA-temporal variant tracking</p>
+      <h1>Modern RT diagnostics that stay faithful to the Perl original</h1>
+      <p>
+        `aa-caller` reproduces the `stand_alone_fullkkwr2` workflow while giving
+        you importable Python primitives (`SamContainer`, `FullReference`,
+        `Amplicon`, etc.), extra validation, and exports that downstream tools can
+        consume consistently.
+      </p>
+      <div class="rows">
+        <div>
+          <strong class="badge">TSV / XML</strong>
+          <p>Identical outputs to the legacy Perl script so your downstream pipeline keeps running.</p>
+        </div>
+        <div>
+          <strong class="badge">Strand balance</strong>
+          <p>Tracks forward/reverse counts, ratios, and entropy per position for richer diagnostics.</p>
+        </div>
+        <div>
+          <strong class="badge">CLI + API</strong>
+          <p>Use the `aa-caller` command-line or import its helpers directly inside automated workflows or notebooks.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Installation</h2>
+      <p>Install locally before running the CLI or importing the package:</p>
+      <pre><code>pip install ./aa_caller</code></pre>
+      <p>or publish via PyPI/Twine and install from the registry.</p>
+      <p>The CLI entry point then becomes available as <code>aa-caller</code>.</p>
+    </section>
+
+    <section class="card">
+      <h2>CLI usage</h2>
+      <p>Invoke the tool with a SAM file, a FASTA reference, and an amplicon TSV:</p>
+      <pre><code>aa-caller sample.sam reference.fasta amplicons.tsv</code></pre>
+      <p>Optionally tune the strand-ratio window and entropy threshold:</p>
+      <pre><code>aa-caller sample.sam reference.fasta amplicons.tsv --ratio-upper 3.16 --ratio-lower 0.32 --entropy-threshold 0.5</code></pre>
+      <p>The CLI writes <code>sample.sam.tsv</code> and <code>sample.sam.xml</code> with the same columns and structure as the original script.</p>
+    </section>
+
+    <section class="card">
+      <h2>Package API</h2>
+      <p>You can skip the CLI and import the core objects for tighter integration:</p>
+      <pre><code>from aa_caller import SamContainer, FullReference, parse_amplicons</code></pre>
+      <p>This lets you run the core logic inside Python jobs, unit tests, or notebooks without shelling out.</p>
+    </section>
+
+    <section class="card">
+      <h2>Development &amp; CI parity</h2>
+      <p>Install the project with the dev tooling so local runs match CI:</p>
+      <pre><code>pip install --upgrade pip
+pip install -e .[dev]</code></pre>
+      <p>That gives you <code>pytest</code> and <code>ruff</code>, which the workflow runs on every push/PR:</p>
+      <pre><code>ruff check .
+python -m pytest</code></pre>
+      <p>If you ever need to understand the workflow, see <a href="../.github/workflows/python-tests.yml">the CI definition</a>.</p>
+    </section>
+
+    <section class="card">
+      <h2>Testing</h2>
+      <ul>
+        <li>Validation helpers cover codon translation, input validation, and simple parser paths.</li>
+        <li>The pytest suite lives in <code>tests/test_app.py</code> and aims to keep the legacy behavior locked down.</li>
+        <li>Run <code>python -m pytest</code> locally, preferably after <code>ruff check .</code>.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Maintained by the aa-caller core team · Generated docs for quick reference.
+    </footer>
+  </main>
+</body>
+</html>

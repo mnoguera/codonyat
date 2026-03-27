@@ -5,6 +5,12 @@ A standalone Python package that exposes the same RT variant calling workflow as
 - SAM parsing that honors amplicon labels and strand orientation.
 - Ratio balancing, entropy tracking, and TSV/XML exporters mirroring the legacy Perl outputs.
 - Configurable CLI flags for strand ratio bounds and entropy sensitivity.
+ 
+## Highlights
+
+- Produces TSV/XML diagnostics identical to the legacy Perl script while adding Python objects (`SamContainer`, `FullReference`, etc.) that downstream tooling can import.
+- Validates every input file before parsing to surface malformed SAM/FASTA/amplicon data early.
+- Logs per-position entropy and strand balance for easier debugging in CI or local runs.
 
 ## Installation
 
@@ -35,6 +41,24 @@ from aa_caller import SamContainer, FullReference, parse_amplicons
 ```
 
 The `SamContainer` constructor still accepts `ratio_upper`, `ratio_lower`, and `entropy_threshold` so you can reuse the balancing logic in scripts.
+
+## Development
+
+Install the repository with the optional dev tooling so your local environment matches CI:
+
+```bash
+pip install --upgrade pip
+pip install -e .[dev]
+```
+
+Now you can run the same checks that land in [.github/workflows/python-tests.yml](.github/workflows/python-tests.yml#L1-L27):
+
+```bash
+ruff check .
+python -m pytest
+```
+
+The workflow installs `pytest` and `ruff`, runs the linter, and then executes the pytest suite on every push/PR against `main`.
 
 ## Testing
 
