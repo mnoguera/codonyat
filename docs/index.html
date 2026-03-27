@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>aa-caller | RNA-guided variant calling</title>
+  <title>codonyat | RNA-guided variant calling</title>
   <style>
     :root {
       color-scheme: light;
@@ -129,10 +129,10 @@
 <body>
   <main>
     <section class="card">
-      <p class="hero-meta">aa-caller · RNA-temporal variant tracking</p>
+      <p class="hero-meta">codonyat · RNA-temporal variant tracking</p>
       <h1>RT-aware variant detection built for automation</h1>
       <p>
-        `aa-caller` drives the RT variant calling pipeline: it validates the SAM/reference/amplicon inputs, ingests every mapped read into a `SamContainer`, and calculates strand-aware ratios, entropy, and TSV/XML exports that downstream workflows consume without extra parsing.
+        `codonyat` drives the RT variant calling pipeline: it validates the SAM/reference/amplicon inputs, ingests every mapped read into a `SamContainer`, and calculates strand-aware ratios, entropy, and TSV/XML exports that downstream workflows consume without extra parsing.
       </p>
       <div class="rows">
         <div>
@@ -145,7 +145,7 @@
         </div>
         <div>
           <strong class="badge">CLI + API</strong>
-          <p>Run `aa-caller` from the shell or import `SamContainer`, `FullReference`, and `parse_amplicons` in Python for tighter automation.</p>
+          <p>Run `codonyat` from the shell or import `SamContainer`, `FullReference`, and `parse_amplicons` in Python for tighter automation.</p>
         </div>
       </div>
     </section>
@@ -153,17 +153,17 @@
     <section class="card">
       <h2>Installation</h2>
       <p>Install locally before running the CLI or importing the package:</p>
-      <pre><code>pip install ./aa_caller</code></pre>
+      <pre><code>pip install .</code></pre>
       <p>or publish via PyPI/Twine and install from the registry.</p>
-      <p>The CLI entry point then becomes available as <code>aa-caller</code>.</p>
+      <p>The CLI entry point then becomes available as <code>codonyat</code>.</p>
     </section>
 
     <section class="card">
       <h2>CLI usage</h2>
       <p>Invoke the tool with a SAM file, a FASTA reference, and an amplicon TSV:</p>
-      <pre><code>aa-caller sample.sam reference.fasta amplicons.tsv</code></pre>
+      <pre><code>codonyat sample.sam reference.fasta amplicons.tsv</code></pre>
       <p>Optionally tune the strand-ratio window and entropy threshold:</p>
-      <pre><code>aa-caller sample.sam reference.fasta amplicons.tsv --ratio-upper 3.16 --ratio-lower 0.32 --entropy-threshold 0.5</code></pre>
+      <pre><code>codonyat sample.sam reference.fasta amplicons.tsv --ratio-upper 3.16 --ratio-lower 0.32 --entropy-threshold 0.5</code></pre>
       <p>The CLI writes <code>sample.sam.tsv</code> and <code>sample.sam.xml</code> with columns for FILE, REFERENCE, PROTEIN, VARIANT, POSITION, FREQ, FWCOV, RVCOV, TOTALCOV, and RATIO so every downstream consumer sees the same diagnostics each time.</p>
     </section>
 
@@ -207,7 +207,7 @@ python -m pytest</code></pre>
     </section>
 
     <footer>
-      Maintained by the aa-caller core team · Generated docs for quick reference.
+      Maintained by the codonyat core team · Generated docs for quick reference.
     </footer>
   </main>
 </body>

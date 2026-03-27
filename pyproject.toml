@@ -3,9 +3,9 @@ requires = ["setuptools>=65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aa-caller"
+name = "codonyat"
 version = "0.1.0"
-description = "Packaged RT variant caller from the legacy stand_alone_fullkkwr2 script."
+description = "codon-yat — A codon-aware amino acid variant typer from SAM alignments of viral NGS data."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{name = "Marc Noguera Julian", email = "info@treetopunder.com"}]
@@ -22,7 +22,7 @@ classifiers = [
 "Source" = "https://github.com/mnoguera/aa_caller"
 
 [project.scripts]
-aa-caller = "aa_caller.app:main"
+codonyat = "aa_caller.app:main"
 
 [project.optional-dependencies]
 dev = [
