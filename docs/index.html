@@ -165,6 +165,8 @@
       <p>Optionally tune the strand-ratio window and entropy threshold:</p>
       <pre><code>codonyat sample.sam reference.fasta amplicons.tsv --ratio-upper 3.16 --ratio-lower 0.32 --entropy-threshold 0.5</code></pre>
       <p>The CLI writes <code>sample.sam.tsv</code> and <code>sample.sam.xml</code> with columns for FILE, REFERENCE, PROTEIN, VARIANT, POSITION, FREQ, FWCOV, RVCOV, TOTALCOV, and RATIO so every downstream consumer sees the same diagnostics each time.</p>
+      <p>The lightweight <code>codonyat-runner</code> entry point reuses the same parsed arguments, exposes the <code>--csv-path</code>/<code>--xml-path</code> overrides, and prints the generated artifact locations so it can slot into smaller pipelines without the full CLI context.</p>
+      <pre><code>codonyat-runner sample.sam reference.fasta amplicons.tsv --ratio-upper 3.1 --csv-path results.tsv</code></pre>
     </section>
 
     <section class="card">
@@ -184,6 +186,33 @@
       <p>You can skip the CLI and import the core objects for tighter integration:</p>
       <pre><code>from aa_caller import SamContainer, FullReference, parse_amplicons</code></pre>
       <p>This lets you run the core logic inside Python jobs, unit tests, or notebooks without shelling out.</p>
+      <p>Call <code>call_variants</code> to validate the inputs, run the translation pipeline, emit the TSV/XML diagnostics, and return a <code>VariantCallResult</code> exposing the artifact paths plus the underlying <code>SamContainer</code>.</p>
+      <pre><code>from pathlib import Path
+
+from aa_caller import call_variants
+
+result = call_variants(
+  sam_path=Path("reads.sam"),
+  reference_path=Path("reference.fasta"),
+  amplicons_path=Path("amps.tsv"),
+  ratio_upper=3.2,
+)
+
+print(result.csv_path, result.xml_path)
+print(result.container.variants.keys())
+</code></pre>
+      <p>If you already have an <code>argparse.Namespace</code> or mapping of CLI arguments, <code>call_variants_from_args</code> adapts them directly so wrappers such as <code>codonyat-runner</code> stay aligned with the same behavior.</p>
+      <pre><code>from argparse import Namespace
+
+args = Namespace(
+  sam_file="reads.sam",
+  reference_file="reference.fasta",
+  amplicons_file="amps.tsv",
+  ratio_upper=3.2,
+)
+
+call_variants_from_args(args)
+</code></pre>
     </section>
 
     <section class="card">
