@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aa-caller"
+version = "0.1.0"
+description = "Packaged RT variant caller from the legacy stand_alone_fullkkwr2 script."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Marc Noguera Julian", email = "info@treetopunder.com"}]
+dependencies = [
+    "biopython>=1.79",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Source" = "https://github.com/mnoguera/aa_caller"
+
+[project.scripts]
+aa-caller = "aa_caller.app:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]

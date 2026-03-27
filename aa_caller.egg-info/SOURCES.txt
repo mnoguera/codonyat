@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+aa_caller/__init__.py
+aa_caller/__main__.py
+aa_caller/app.py
+aa_caller.egg-info/PKG-INFO
+aa_caller.egg-info/SOURCES.txt
+aa_caller.egg-info/dependency_links.txt
+aa_caller.egg-info/entry_points.txt
+aa_caller.egg-info/requires.txt
+aa_caller.egg-info/top_level.txt
+tests/test_app.py
