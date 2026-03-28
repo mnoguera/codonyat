@@ -1,2 +1,0 @@
-[console_scripts]
-aa-caller = aa_caller.app:main
