@@ -98,12 +98,6 @@ nextflow run . -profile docker \
     --reference data/HXB2R.fasta \
     --amplicons data/amplicons.tsv
 
-# This repository also supports the common but non-standard form below
-nextflow run . --profile docker \
-    --input samplesheet.csv \
-    --reference data/HXB2R.fasta \
-    --amplicons data/amplicons.tsv
-
 # Run with bundled test data
 nextflow run . -profile docker,test
 ```
