@@ -24,10 +24,17 @@ class FullReference:
         self.seq = str(record.seq).upper()
         self.id = record.id
         header_parts = record.description.split(";")
-        for part in header_parts:
+        for i, part in enumerate(header_parts):
             part = part.strip()
             if not part:
                 continue
+            # The first segment includes the sequence ID prefix (e.g.
+            # "K03455|HIVHXB2CG RT(Protease):1-99"); strip it so
+            # Protein.from_string receives just "RT(Protease):1-99".
+            if i == 0 and part.startswith(record.id):
+                part = part[len(record.id):].strip()
+                if not part:
+                    continue
             protein = Protein.from_string(part)
             self.proteins[protein.name] = protein
 

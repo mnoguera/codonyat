@@ -34,10 +34,10 @@ _SAM_TEMPLATE = "{qname}\t{flag}\t{rname}\t{pos}\t{mapq}\t{cigar}\t*\t0\t0\t{seq
 def _make_fasta(path: Path, protein_header: str = "RT(ReverseTranscriptase):1-30") -> Path:
     """Write a minimal FASTA file with protein annotation.
 
-    The entire description is the protein annotation so that
-    FullReference._load_reference can parse it directly.
+    Uses the standard format: >seqid protein(description):start-end
+    where seqid is separated from the protein annotation by a space.
     """
-    path.write_text(f">{protein_header}\n{_REF_SEQ}\n")
+    path.write_text(f">testref {protein_header}\n{_REF_SEQ}\n")
     return path
 
 
