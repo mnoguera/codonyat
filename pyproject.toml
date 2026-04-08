@@ -22,7 +22,7 @@ classifiers = [
 "Source" = "https://github.com/mnoguera/codonyat"
 
 [project.scripts]
-codonyat = "aa_caller.app:main"
+codonyat = "aa_caller.cli:main"
 codonyat-runner = "aa_caller.runner:runner_cli"
 
 [project.optional-dependencies]
