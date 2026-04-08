@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>codonyat | RNA-guided variant calling</title>
+  <title>codonyat | Codon-aware variant calling for viral NGS</title>
   <style>
     :root {
       color-scheme: light;
@@ -13,9 +13,7 @@
       color: #e4e4f5;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -26,9 +24,7 @@
       padding: 2rem 1rem 4rem;
     }
 
-    main {
-      width: min(1100px, 100%);
-    }
+    main { width: min(1100px, 100%); }
 
     .card {
       background: rgba(7, 11, 18, 0.85);
@@ -51,6 +47,13 @@
       font-size: 1.4rem;
     }
 
+    h3 {
+      margin-top: 1.2rem;
+      margin-bottom: 0.3rem;
+      font-size: 1.1rem;
+      color: #94d2ff;
+    }
+
     p {
       margin: 0 0 1rem;
       color: rgba(228, 228, 245, 0.85);
@@ -64,33 +67,66 @@
       text-transform: uppercase;
     }
 
-    ul {
-      padding-left: 1.25rem;
-      margin: 0 0 1rem;
-    }
+    ul, ol { padding-left: 1.25rem; margin: 0 0 1rem; }
+    li + li { margin-top: 0.35rem; }
 
-    li + li {
-      margin-top: 0.35rem;
-    }
-
-    code,
-    pre {
+    code, pre {
       background: #041013;
       padding: 0.45rem 0.6rem;
       border-radius: 6px;
       font-family: "JetBrains Mono", "Fira Code", monospace;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
     }
 
-    pre {
-      overflow-x: auto;
-    }
+    pre { overflow-x: auto; line-height: 1.5; }
 
     a {
       color: #7fe2ff;
       text-decoration: none;
       border-bottom: 1px solid rgba(127, 226, 255, 0.5);
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.8rem 0 1.2rem;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    th {
+      color: #94d2ff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    td code {
+      padding: 0.15rem 0.35rem;
+      font-size: 0.85rem;
+    }
+
+    .pipeline-flow {
+      background: #0a1520;
+      border: 1px solid rgba(127, 226, 255, 0.15);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.88rem;
+      line-height: 1.8;
+      color: #94d2ff;
+      overflow-x: auto;
+      margin: 0.8rem 0 1.2rem;
+    }
+
+    .pipeline-flow .arrow { color: rgba(228, 228, 245, 0.4); }
+    .pipeline-flow .optional { color: rgba(228, 228, 245, 0.5); font-style: italic; }
 
     footer {
       text-align: center;
@@ -100,105 +136,217 @@
     }
 
     @media (max-width: 620px) {
-      body {
-        padding: 1.5rem 1rem 3rem;
-      }
-
-      .card {
-        padding: 1.25rem;
-      }
+      body { padding: 1.5rem 1rem 3rem; }
+      .card { padding: 1.25rem; }
     }
   </style>
 </head>
 <body>
   <main>
+
+    <!-- Hero -->
     <section class="card">
-      <p class="hero-meta">codonyat · RNA-temporal variant tracking</p>
-      <h1>codon-yat — codon-aware amino acid variant typing</h1>
+      <p class="hero-meta">codonyat &middot; viral NGS variant calling</p>
+      <h1>codon-yat</h1>
       <p>
-        codonyat validates SAM/reference/amplicon triples, loads every mapped read into a `SamContainer`, and emits strand-aware ratios, entropy, and TSV/XML diagnostics that automation pipelines consume without extra parsing.
+        A codon-aware amino acid variant typer from SAM alignments of viral NGS data.
+        Standalone Python package and Nextflow pipeline for end-to-end amplicon variant analysis.
+      </p>
+      <p>
+        <a href="https://github.com/mnoguera/codonyat">GitHub repository</a>
       </p>
     </section>
 
+    <!-- Highlights -->
     <section class="card">
       <h2>Highlights</h2>
       <ul>
-        <li>Produces the same TSV/XML diagnostics as the legacy Perl outputs while exposing Python objects (`SamContainer`, `FullReference`, etc.) for tooling.</li>
-        <li>Validates every input file before parsing so malformed SAM/FASTA/amplicon data fail fast.</li>
-        <li>Records per-position entropy and strand balance for CI-friendly debugging and auditing.</li>
+        <li>CIGAR-aware codon extraction that correctly handles insertions, deletions, and soft clips.</li>
+        <li>Strand-ratio balancing and Shannon entropy tracking at every codon position.</li>
+        <li>TSV/XML output compatible with legacy Perl diagnostics, plus Python objects for downstream tooling.</li>
+        <li>Validates all inputs before parsing &mdash; malformed SAM/FASTA/amplicon data fails fast.</li>
+        <li>Configurable target protein via <code>--protein</code> (defaults to RT).</li>
+        <li>Complete Nextflow DSL2 pipeline with QC, trimming, decontamination, alignment, and optional dedup.</li>
       </ul>
     </section>
 
+    <!-- Nextflow pipeline -->
     <section class="card">
-      <h2>Installation</h2>
-      <p>Install the package locally (or publish via PyPI/Twine) before running the CLI or importing it:</p>
-      <pre><code>pip install .</code></pre>
-      <p>The `codonyat` entry point appears on your PATH once installation completes.</p>
+      <h2>Nextflow pipeline</h2>
+      <p>The repository includes a production-ready Nextflow DSL2 pipeline wrapping codonyat with upstream processing.</p>
+
+      <div class="pipeline-flow">
+        FASTQ <span class="arrow">&rarr;</span> FastQC <span class="arrow">&rarr;</span> fastp <span class="arrow">&rarr;</span> FastQC
+        <span class="arrow">&rarr;</span> bowtie2 <span class="arrow">&rarr;</span> samtools sort
+        <span class="arrow">&rarr;</span> <span class="optional">[Picard dedup]</span>
+        <span class="arrow">&rarr;</span> codonyat <span class="arrow">&rarr;</span> MultiQC
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Step</th><th>Tool</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Quality control</td><td>FastQC</td><td>Per-read QC on raw and trimmed reads</td></tr>
+          <tr><td>Trimming</td><td>fastp</td><td>Adapter removal, quality and length filtering</td></tr>
+          <tr><td>Decontamination</td><td>bowtie2 <code>--no-unal</code></td><td>Drops non-reference reads during alignment</td></tr>
+          <tr><td>Alignment</td><td>bowtie2 <code>--very-sensitive-local</code></td><td>Sensitive local alignment for diverse viral populations</td></tr>
+          <tr><td>Sorting</td><td>samtools sort</td><td>Coordinate-sorted BAM</td></tr>
+          <tr><td>Deduplication</td><td>Picard MarkDuplicates</td><td>Optional (off by default for amplicon data)</td></tr>
+          <tr><td>Variant calling</td><td>codonyat</td><td>Codon-aware amino acid variant typing</td></tr>
+          <tr><td>Reporting</td><td>MultiQC</td><td>Aggregated QC report across all samples</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Quick start</h3>
+      <pre><code># Build the codonyat container
+docker build -t codonyat:latest .
+
+# Run with your data
+nextflow run . -profile docker \
+    --input samplesheet.csv \
+    --reference data/HXB2R.fasta \
+    --amplicons data/amplicons.tsv
+
+# Run with bundled test data
+nextflow run . -profile docker,test</code></pre>
+
+      <h3>Samplesheet format</h3>
+      <p>A CSV file with columns <code>sample_id</code>, <code>fastq_1</code>, and <code>fastq_2</code> (leave <code>fastq_2</code> empty for single-end):</p>
+      <pre><code>sample_id,fastq_1,fastq_2
+sample1,/path/to/sample1_R1.fastq.gz,/path/to/sample1_R2.fastq.gz
+sample2,/path/to/sample2_R1.fastq.gz,</code></pre>
+
+      <h3>Pipeline parameters</h3>
+      <table>
+        <thead>
+          <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>--input</code></td><td>required</td><td>Samplesheet CSV</td></tr>
+          <tr><td><code>--reference</code></td><td>required</td><td>FASTA reference with protein annotations</td></tr>
+          <tr><td><code>--amplicons</code></td><td>required</td><td>Amplicon definitions TSV</td></tr>
+          <tr><td><code>--protein</code></td><td><code>RT</code></td><td>Target protein for variant calling</td></tr>
+          <tr><td><code>--outdir</code></td><td><code>./results</code></td><td>Output directory</td></tr>
+          <tr><td><code>--skip_dedup</code></td><td><code>true</code></td><td>Skip deduplication (default for amplicon data)</td></tr>
+          <tr><td><code>--skip_fastqc</code></td><td><code>false</code></td><td>Skip FastQC steps</td></tr>
+          <tr><td><code>--bowtie2_args</code></td><td><code>--very-sensitive-local --no-unal</code></td><td>bowtie2 alignment flags</td></tr>
+          <tr><td><code>--fastp_args</code></td><td><code>--qualified_quality_phred 20 ...</code></td><td>fastp trimming flags</td></tr>
+          <tr><td><code>--ratio_upper</code></td><td><code>3.162</code></td><td>Upper strand-ratio bound</td></tr>
+          <tr><td><code>--ratio_lower</code></td><td><code>0.316</code></td><td>Lower strand-ratio bound</td></tr>
+          <tr><td><code>--entropy_threshold</code></td><td><code>0.0</code></td><td>Minimum Shannon entropy</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Profiles</h3>
+      <table>
+        <thead>
+          <tr><th>Profile</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>docker</code></td><td>Run with Docker containers</td></tr>
+          <tr><td><code>singularity</code></td><td>Run with Singularity containers</td></tr>
+          <tr><td><code>test</code></td><td>Use bundled test data from <code>data/</code></td></tr>
+        </tbody>
+      </table>
     </section>
 
+    <!-- Python CLI -->
     <section class="card">
       <h2>CLI usage</h2>
-      <p>Invoke the tool with a SAM file, a FASTA reference, and an amplicon TSV:</p>
-      <pre><code>codonyat sample.sam reference.fasta amplicons.tsv</code></pre>
-      <p>Tune the strand-ratio window and entropy threshold as needed:</p>
-      <pre><code>codonyat sample.sam reference.fasta amplicons.tsv --ratio-upper 3.16 --ratio-lower 0.32 --entropy-threshold 0.5</code></pre>
-      <p>The CLI emits <code>sample.sam.tsv</code> and <code>sample.sam.xml</code> with columns for FILE, REFERENCE, PROTEIN, VARIANT, POSITION, FREQ, FWCOV, RVCOV, TOTALCOV, and RATIO so downstream consumers get consistent diagnostics.</p>
-      <p>The lightweight <code>codonyat-runner</code> entry point reuses the parsed arguments, supports <code>--csv-path</code>/<code>--xml-path</code> overrides, and prints the generated artifact locations so it fits into leaner pipelines.</p>
-      <pre><code>codonyat-runner sample.sam reference.fasta amplicons.tsv --ratio-upper 3.1 --csv-path results.tsv</code></pre>
+      <p>Install the package and run the variant caller directly on a SAM file:</p>
+      <pre><code>pip install .
+
+codonyat sample.sam reference.fasta amplicons.tsv \
+    --protein RT \
+    --ratio-upper 3.16 \
+    --entropy-threshold 0.5</code></pre>
+      <p>Output: <code>sample.sam.tsv</code> (columns: FILE, REFERENCE, PROTEIN, VARIANT, POSITION, FREQ, FWCOV, RVCOV, TOTALCOV, RATIO) and <code>sample.sam.xml</code> with per-position depth and variant elements.</p>
+      <p>The lightweight <code>codonyat-runner</code> entry point supports <code>--csv-path</code> / <code>--xml-path</code> overrides for custom output locations:</p>
+      <pre><code>codonyat-runner sample.sam reference.fasta amplicons.tsv \
+    --protein RT --ratio-upper 3.1 --csv-path results.tsv</code></pre>
     </section>
 
+    <!-- Reference format -->
+    <section class="card">
+      <h2>Reference FASTA format</h2>
+      <p>The FASTA header must include protein annotations in <code>Name(Description):start-end</code> format, separated by semicolons:</p>
+      <pre><code>&gt;K03455|HIVHXB2CG PR(Protease):2253-2549;RT(Reverse Transcriptase):2550-3869;INT(Integrase):4230-5093
+TGGAAGGGCTAATTCACTCCCAACGAAGAC...</code></pre>
+      <p>Coordinates are 1-based positions on the reference sequence. The <code>--protein</code> flag selects which annotation to use for variant calling.</p>
+    </section>
+
+    <!-- Python API -->
     <section class="card">
       <h2>Package API</h2>
-      <p>Import the core objects when you need tighter integration:</p>
+      <p>Import the core objects for tighter integration:</p>
       <pre><code>from aa_caller import SamContainer, FullReference, parse_amplicons</code></pre>
-      <p>Use <code>call_variants</code> to validate inputs, run the translation pipeline, emit the TSV/XML artifacts, and return a <code>VariantCallResult</code> with the paths plus the underlying <code>SamContainer</code>:</p>
+      <p>Use <code>call_variants</code> to run the full pipeline from Python:</p>
       <pre><code>from pathlib import Path
-
 from aa_caller import call_variants
 
 result = call_variants(
-  sam_path=Path("reads.sam"),
-  reference_path=Path("reference.fasta"),
-  amplicons_path=Path("amps.tsv"),
-  ratio_upper=3.2,
+    sam_path=Path("reads.sam"),
+    reference_path=Path("reference.fasta"),
+    amplicons_path=Path("amps.tsv"),
+    protein="RT",
+    ratio_upper=3.2,
 )
 
 print(result.csv_path, result.xml_path)
-print(result.container.variants.keys())
-</code></pre>
-      <p>If you have an <code>argparse.Namespace</code> or mapping of CLI arguments, <code>call_variants_from_args</code> adapts them so wrappers like <code>codonyat-runner</code> stay synchronized:</p>
+print(result.container.variants.keys())</code></pre>
+      <p>Adapt an <code>argparse.Namespace</code> or mapping with <code>call_variants_from_args</code>:</p>
       <pre><code>from argparse import Namespace
+from aa_caller import call_variants_from_args
 
 args = Namespace(
-  sam_file="reads.sam",
-  reference_file="reference.fasta",
-  amplicons_file="amps.tsv",
-  ratio_upper=3.2,
+    sam_file="reads.sam",
+    reference_file="reference.fasta",
+    amplicons_file="amps.tsv",
+    protein="RT",
+    ratio_upper=3.2,
 )
 
-call_variants_from_args(args)
-</code></pre>
+call_variants_from_args(args)</code></pre>
     </section>
 
+    <!-- Development -->
     <section class="card">
       <h2>Development</h2>
-      <p>Install the repo with optional dev tooling to match CI:</p>
+      <p>Install with dev tooling to match CI:</p>
       <pre><code>pip install --upgrade pip
 pip install -e .[dev]</code></pre>
-      <p>The workflow installs <code>pytest</code> and <code>ruff</code> and runs them on every push/PR; see <a href="../.github/workflows/python-tests.yml">the CI definition</a> for details.</p>
+      <p>Run the checks that execute in <a href="https://github.com/mnoguera/codonyat/blob/main/.github/workflows/python-tests.yml">CI</a>:</p>
+      <pre><code>ruff check .
+python -m pytest</code></pre>
     </section>
 
+    <!-- Project structure -->
     <section class="card">
-      <h2>Testing</h2>
-      <ul>
-        <li>Validation helpers cover codon translation, input validation, and simple parser paths.</li>
-        <li>The pytest suite lives in <code>tests/test_app.py</code> and keeps the legacy behavior locked down.</li>
-        <li>Run <code>python -m pytest</code> locally, preferably after <code>ruff check .</code>.</li>
-      </ul>
+      <h2>Project structure</h2>
+      <pre><code>codonyat/
+&#9500;&#9472;&#9472; aa_caller/            # Python package
+&#9474;   &#9500;&#9472;&#9472; cli.py            # CLI entry point
+&#9474;   &#9500;&#9472;&#9472; runner.py         # Python API (call_variants)
+&#9474;   &#9500;&#9472;&#9472; container.py      # SamContainer &mdash; variant aggregation
+&#9474;   &#9500;&#9472;&#9472; sam.py            # SamEntry &mdash; CIGAR-aware SAM parsing
+&#9474;   &#9500;&#9472;&#9472; reference.py      # FullReference &mdash; FASTA + annotations
+&#9474;   &#9500;&#9472;&#9472; models.py         # Protein, Amplicon, Variant, Qual
+&#9474;   &#9500;&#9472;&#9472; validators.py     # Input file validation
+&#9474;   &#9500;&#9472;&#9472; genetic_code.py   # Codon translation table
+&#9474;   &#9492;&#9472;&#9472; constants.py      # Default thresholds
+&#9500;&#9472;&#9472; modules/local/        # Nextflow process modules
+&#9500;&#9472;&#9472; conf/                 # Nextflow resource config
+&#9500;&#9472;&#9472; data/                 # Test data (HXB2R, amplicons, SAM)
+&#9500;&#9472;&#9472; tests/                # pytest suite (unit + integration)
+&#9500;&#9472;&#9472; main.nf               # Nextflow pipeline entry
+&#9500;&#9472;&#9472; nextflow.config       # Pipeline parameters and profiles
+&#9500;&#9472;&#9472; Dockerfile            # Container build
+&#9492;&#9472;&#9472; pyproject.toml        # Python package metadata</code></pre>
     </section>
 
     <footer>
-      Maintained by the codonyat core team · Generated docs for quick reference.
+      codonyat &middot; MIT License &middot; <a href="https://github.com/mnoguera/codonyat">Source on GitHub</a>
     </footer>
   </main>
 </body>
