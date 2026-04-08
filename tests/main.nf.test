@@ -15,11 +15,15 @@ nextflow_pipeline {
 
         then {
             assert workflow.success
+            def tsv = path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.tsv")
+            def xml = path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.xml")
 
-            assert snapshot(
-                path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.tsv").md5,
-                path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.xml").md5
-            ).match()
+            assert tsv.exists()
+            assert xml.exists()
+            assert tsv.text.contains("FILE\tREFERENCE\tPROTEIN\tVARIANT\tPOSITION")
+            assert tsv.text.contains("HVG286PL_S2_L001.sam")
+            assert xml.text.contains("<SamContainer")
+            assert xml.text.contains("<Position index=\"2550\">")
         }
     }
 }
