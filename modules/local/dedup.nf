@@ -1,7 +1,6 @@
 process PICARD_MARKDUPLICATES {
     tag "${meta.id}"
     label 'process_medium'
-    container 'broadinstitute/picard:3.1.1'
 
     input:
     tuple val(meta), path(bam)

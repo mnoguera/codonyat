@@ -1,7 +1,6 @@
 process CODONYAT {
     tag "${meta.id}"
     label 'process_medium'
-    container 'codonyat:latest'
 
     input:
     tuple val(meta), path(sam)

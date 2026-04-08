@@ -1,0 +1,25 @@
+nextflow_pipeline {
+    name   "Full pipeline"
+    script "main.nf"
+
+    // Uses the `docker` profile (enables container runtime) and the
+    // `test` profile (supplies input/reference/amplicons from data/).
+    profile "docker,test"
+
+    test("runs end-to-end and produces expected outputs") {
+        when {
+            params {
+                outdir = "${outputDir}"
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            assert snapshot(
+                path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.tsv").md5,
+                path("${outputDir}/codonyat/HVG286PL_S2_L001.sam.xml").md5
+            ).match()
+        }
+    }
+}

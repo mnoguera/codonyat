@@ -1,7 +1,6 @@
 process FASTP {
     tag "${meta.id}"
     label 'process_medium'
-    container 'biocontainers/fastp:0.23.4--hadf994f_0'
 
     input:
     tuple val(meta), path(reads)

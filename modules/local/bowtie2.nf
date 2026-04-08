@@ -1,6 +1,5 @@
 process BOWTIE2_BUILD {
     label 'process_medium'
-    container 'biocontainers/bowtie2:2.5.4--he20e202_1'
 
     input:
     path(reference)
@@ -18,7 +17,6 @@ process BOWTIE2_BUILD {
 process BOWTIE2_ALIGN {
     tag "${meta.id}"
     label 'process_high'
-    container 'biocontainers/mulled-v2-ac74a7f02cebcfcc07d8e8d1d750af9c83b4d45a:f70b31a2db15c023d641c32f7f8571f6e1e50f8f-0'
 
     input:
     tuple val(meta), path(reads)
