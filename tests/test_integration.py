@@ -328,3 +328,30 @@ class TestRunnerAPI:
         assert csv_out.exists()
         assert xml_out.exists()
         assert len(result.container.variants) == 10
+
+    def test_non_rt_protein(self, tmp_path: Path) -> None:
+        """Verify that a non-RT protein can be analyzed via the --protein flag."""
+        sam_path = _make_sam(tmp_path / "reads.sam")
+        fasta_path = _make_fasta(tmp_path / "ref.fasta", protein_header="POL(Polymerase):1-30")
+        amp_path = _make_amplicon_tsv(tmp_path / "amps.tsv")
+        csv_out = tmp_path / "result.tsv"
+        xml_out = tmp_path / "result.xml"
+
+        result = call_variants(
+            sam_path=sam_path,
+            reference_path=fasta_path,
+            amplicons_path=amp_path,
+            protein="POL",
+            csv_path=csv_out,
+            xml_path=xml_out,
+        )
+
+        assert csv_out.exists()
+        assert xml_out.exists()
+        assert len(result.container.variants) == 10
+        # Verify the CSV uses the correct protein name
+        with open(csv_out) as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for row in reader:
+                assert row["PROTEIN"] == "POL"
+                break

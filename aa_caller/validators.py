@@ -22,13 +22,13 @@ def validate_sam_file(path: Path) -> None:
         raise ValueError(f"SAM file {path} contains no alignment entries")
 
 
-def validate_reference_file(path: Path) -> None:
-    """Ensure the reference FASTA carries the protein metadata that RT parsing needs."""
+def validate_reference_file(path: Path, *, protein_name: str = "RT") -> None:
+    """Ensure the reference FASTA carries the protein metadata that parsing needs."""
     record = next(SeqIO.parse(str(path), "fasta"), None)
     if record is None:
         raise ValueError(f"Reference file {path} is empty or not FASTA")
-    if "RT" not in record.description:
-        raise ValueError(f"Reference {path} header is missing an RT protein annotation")
+    if protein_name not in record.description:
+        raise ValueError(f"Reference {path} header is missing an {protein_name} protein annotation")
 
 
 def validate_amplicon_file(path: Path) -> None:

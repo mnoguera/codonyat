@@ -29,6 +29,7 @@ def call_variants(
     ratio_upper: float = DEFAULT_RATIO_UPPER,
     ratio_lower: float = DEFAULT_RATIO_LOWER,
     entropy_threshold: float = DEFAULT_ENTROPY_THRESHOLD,
+    protein: str = "RT",
     csv_path: Path | str | None = None,
     xml_path: Path | str | None = None,
 ) -> VariantCallResult:
@@ -39,7 +40,7 @@ def call_variants(
     amplicons_path = Path(amplicons_path)
 
     validate_sam_file(sam_path)
-    validate_reference_file(reference_path)
+    validate_reference_file(reference_path, protein_name=protein)
     validate_amplicon_file(amplicons_path)
 
     amplicons = parse_amplicons(amplicons_path)
@@ -51,12 +52,12 @@ def call_variants(
         entropy_threshold=entropy_threshold,
     )
     container.load()
-    container.calculate_variant_frequencies("RT", reference)
+    container.calculate_variant_frequencies(protein, reference)
 
     csv_path = Path(csv_path) if csv_path else sam_path.with_suffix(sam_path.suffix + ".tsv")
     xml_path = Path(xml_path) if xml_path else sam_path.with_suffix(sam_path.suffix + ".xml")
 
-    container.write_csv(str(sam_path), reference, csv_path)
+    container.write_csv(str(sam_path), reference, csv_path, protein_name=protein)
     container.write_xml(str(sam_path), reference, xml_path)
 
     return VariantCallResult(
@@ -70,6 +71,7 @@ def call_variants(
 
 def call_variants_from_args(
     args: Namespace | Mapping[str, Any], *, ratio_upper: float | None = None, ratio_lower: float | None = None, entropy_threshold: float | None = None,
+    protein: str | None = None,
     csv_path: Path | str | None = None,
     xml_path: Path | str | None = None,
 ) -> VariantCallResult:
@@ -91,6 +93,7 @@ def call_variants_from_args(
     effective_ratio_upper = ratio_upper if ratio_upper is not None else _pick("ratio_upper", DEFAULT_RATIO_UPPER)
     effective_ratio_lower = ratio_lower if ratio_lower is not None else _pick("ratio_lower", DEFAULT_RATIO_LOWER)
     effective_entropy_threshold = entropy_threshold if entropy_threshold is not None else _pick("entropy_threshold", DEFAULT_ENTROPY_THRESHOLD)
+    effective_protein = protein if protein is not None else _pick("protein", "RT")
 
     overriding_csv = csv_path if csv_path is not None else _pick("csv_path")
     overriding_xml = xml_path if xml_path is not None else _pick("xml_path")
@@ -102,6 +105,7 @@ def call_variants_from_args(
         ratio_upper=effective_ratio_upper,
         ratio_lower=effective_ratio_lower,
         entropy_threshold=effective_entropy_threshold,
+        protein=effective_protein,
         csv_path=overriding_csv,
         xml_path=overriding_xml,
     )
@@ -117,6 +121,7 @@ def runner_cli() -> None:
     parser.add_argument("--ratio-upper", type=float, default=DEFAULT_RATIO_UPPER, help="Upper bound for strand balance")
     parser.add_argument("--ratio-lower", type=float, default=DEFAULT_RATIO_LOWER, help="Lower bound for strand balance")
     parser.add_argument("--entropy-threshold", type=float, default=DEFAULT_ENTROPY_THRESHOLD, help="Minimum entropy to mark a position")
+    parser.add_argument("--protein", type=str, default="RT", help="Target protein name to analyze (default: RT)")
     parser.add_argument("--csv-path", type=Path, help="Override the TSV output path")
     parser.add_argument("--xml-path", type=Path, help="Override the XML output path")
 

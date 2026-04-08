@@ -180,7 +180,7 @@ class SamContainer:
             balanced,
         )
 
-    def write_csv(self, sample_name: str, reference: FullReference, output_path: Path) -> None:
+    def write_csv(self, sample_name: str, reference: FullReference, output_path: Path, *, protein_name: str = "RT") -> None:
         """Emit the variant summary as a TSV file that mirrors the Perl outputs."""
         fieldnames = [
             "FILE",
@@ -206,7 +206,7 @@ class SamContainer:
                         {
                             "FILE": sample_name,
                             "REFERENCE": reference.id,
-                            "PROTEIN": "RT",
+                            "PROTEIN": protein_name,
                             "VARIANT": variant.codon,
                             "POSITION": pos,
                             "FREQ": round((variant.count / depth * 100) if depth else 0, 3),

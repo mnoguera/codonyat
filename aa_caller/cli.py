@@ -37,6 +37,12 @@ def main() -> None:
         default=DEFAULT_ENTROPY_THRESHOLD,
         help="Minimum Shannon entropy required to mark a position as diverse.",
     )
+    parser.add_argument(
+        "--protein",
+        type=str,
+        default="RT",
+        help="Target protein name to analyze (default: RT).",
+    )
     args = parser.parse_args()
 
     if not args.sam_file.exists():
@@ -48,7 +54,7 @@ def main() -> None:
 
     logger.info("Validating input formats before parsing")
     validate_sam_file(args.sam_file)
-    validate_reference_file(args.reference_file)
+    validate_reference_file(args.reference_file, protein_name=args.protein)
     validate_amplicon_file(args.amplicons_file)
 
     logger.info("Reading amplicon configuration")
@@ -68,13 +74,13 @@ def main() -> None:
     )
     container.load()
 
-    logger.info("Calculating RT variant frequencies")
-    container.calculate_variant_frequencies("RT", reference)
+    logger.info("Calculating %s variant frequencies", args.protein)
+    container.calculate_variant_frequencies(args.protein, reference)
 
     csv_path = args.sam_file.with_suffix(args.sam_file.suffix + ".tsv")
     xml_path = args.sam_file.with_suffix(args.sam_file.suffix + ".xml")
     logger.info("Writing TSV results")
     # final exports mirror the Perl output format consumed by downstream workflows
-    container.write_csv(str(args.sam_file), reference, csv_path)
+    container.write_csv(str(args.sam_file), reference, csv_path, protein_name=args.protein)
     logger.info("Writing XML dump")
     container.write_xml(str(args.sam_file), reference, xml_path)
