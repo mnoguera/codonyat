@@ -74,6 +74,52 @@
       "description": "Minimum Shannon entropy required to flag diversity.",
       "default": 0,
       "minimum": 0
+    },
+    "docker_image": {
+      "type": "string",
+      "description": "Docker image URI for the pipeline (default: codonyat:latest; override for Docker Hub builds)",
+      "default": "codonyat:latest",
+      "minLength": 1
+    },
+    "aws_region": {
+      "type": "string",
+      "description": "AWS region used by the Batch executor profile.",
+      "default": "eu-west-1",
+      "minLength": 1
+    },
+    "aws_batch_queue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "AWS Batch queue name to submit tasks to.",
+      "default": null
+    },
+    "aws_workdir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "S3 work directory required for AWS Batch (for example s3://bucket/work).",
+      "default": null,
+      "pattern": "^(s3://.+)?$"
+    },
+    "aws_outdir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "S3 output directory override for cloud runs (for example s3://bucket/results).",
+      "default": null,
+      "pattern": "^(s3://.+)?$"
+    },
+    "aws_container": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Container image URI reachable by AWS Batch workers (typically ECR).",
+      "default": null
     }
   },
   "required": [
