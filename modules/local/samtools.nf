@@ -1,7 +1,6 @@
 process SAMTOOLS_SORT {
     tag "${meta.id}"
     label 'process_medium'
-    container 'biocontainers/samtools:1.20--h50ea8bc_1'
 
     input:
     tuple val(meta), path(bam)
@@ -18,7 +17,6 @@ process SAMTOOLS_SORT {
 process SAMTOOLS_INDEX {
     tag "${meta.id}"
     label 'process_low'
-    container 'biocontainers/samtools:1.20--h50ea8bc_1'
 
     input:
     tuple val(meta), path(bam)
@@ -35,7 +33,6 @@ process SAMTOOLS_INDEX {
 process BAM_TO_SAM {
     tag "${meta.id}"
     label 'process_low'
-    container 'biocontainers/samtools:1.20--h50ea8bc_1'
 
     input:
     tuple val(meta), path(bam)

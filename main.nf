@@ -19,13 +19,14 @@ include { CODONYAT                  } from './modules/local/codonyat'
 include { MULTIQC                   } from './modules/local/multiqc'
 
 workflow {
-    // Parse samplesheet
+    // Parse samplesheet — resolve relative FASTQ paths against the samplesheet's directory
+    def sheet = file(params.input)
     ch_input = Channel.fromPath(params.input, checkIfExists: true)
         .splitCsv(header: true)
         .map { row ->
             def meta = [id: row.sample_id]
-            def r1   = file(row.fastq_1, checkIfExists: true)
-            def reads = row.fastq_2 ? [r1, file(row.fastq_2, checkIfExists: true)] : [r1]
+            def r1   = file(row.fastq_1.startsWith('/') ? row.fastq_1 : "${sheet.parent}/${row.fastq_1}", checkIfExists: true)
+            def reads = row.fastq_2 ? [r1, file(row.fastq_2.startsWith('/') ? row.fastq_2 : "${sheet.parent}/${row.fastq_2}", checkIfExists: true)] : [r1]
             [meta, reads]
         }
 

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://github.com/mnoguera/codonyat/blob/main/nextflow_schema.json",
+  "title": "codonyat pipeline parameters",
+  "description": "JSON schema for codonyat Nextflow pipeline parameters.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "input": {
+      "type": "string",
+      "description": "Samplesheet CSV containing sample_id, fastq_1, fastq_2 columns.",
+      "minLength": 1,
+      "format": "file-path"
+    },
+    "reference": {
+      "type": "string",
+      "description": "Reference FASTA with protein coordinate annotations in the header.",
+      "minLength": 1,
+      "format": "file-path"
+    },
+    "amplicons": {
+      "type": "string",
+      "description": "Amplicon definitions TSV used for codon-aware calling.",
+      "minLength": 1,
+      "format": "file-path"
+    },
+    "protein": {
+      "type": "string",
+      "description": "Target protein name for amino acid variant calling.",
+      "default": "RT",
+      "minLength": 1
+    },
+    "outdir": {
+      "type": "string",
+      "description": "Directory where pipeline outputs are written.",
+      "default": "./results",
+      "minLength": 1,
+      "format": "directory-path"
+    },
+    "skip_dedup": {
+      "type": "boolean",
+      "description": "Skip Picard MarkDuplicates.",
+      "default": true
+    },
+    "skip_fastqc": {
+      "type": "boolean",
+      "description": "Skip FastQC on raw and trimmed reads.",
+      "default": false
+    },
+    "bowtie2_args": {
+      "type": "string",
+      "description": "Additional command-line arguments passed to bowtie2.",
+      "default": "--very-sensitive-local --no-unal"
+    },
+    "fastp_args": {
+      "type": "string",
+      "description": "Additional command-line arguments passed to fastp.",
+      "default": "--qualified_quality_phred 20 --length_required 50 --detect_adapter_for_pe"
+    },
+    "ratio_upper": {
+      "type": "number",
+      "description": "Upper strand-ratio bound passed to codonyat.",
+      "default": 3.16227766,
+      "exclusiveMinimum": 0
+    },
+    "ratio_lower": {
+      "type": "number",
+      "description": "Lower strand-ratio bound passed to codonyat.",
+      "default": 0.316227766,
+      "exclusiveMinimum": 0
+    },
+    "entropy_threshold": {
+      "type": "number",
+      "description": "Minimum Shannon entropy required to flag diversity.",
+      "default": 0,
+      "minimum": 0
+    },
+    "docker_image": {
+      "type": "string",
+      "description": "Docker image URI for the pipeline (default: codonyat:latest; override for Docker Hub builds)",
+      "default": "codonyat:latest",
+      "minLength": 1
+    },
+    "aws_region": {
+      "type": "string",
+      "description": "AWS region used by the Batch executor profile.",
+      "default": "eu-west-1",
+      "minLength": 1
+    },
+    "aws_batch_queue": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "AWS Batch queue name to submit tasks to.",
+      "default": null
+    },
+    "aws_workdir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "S3 work directory required for AWS Batch (for example s3://bucket/work).",
+      "default": null,
+      "pattern": "^(s3://.+)?$"
+    },
+    "aws_outdir": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "S3 output directory override for cloud runs (for example s3://bucket/results).",
+      "default": null,
+      "pattern": "^(s3://.+)?$"
+    },
+    "aws_container": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Container image URI reachable by AWS Batch workers (typically ECR).",
+      "default": null
+    }
+  },
+  "required": [
+    "input",
+    "reference",
+    "amplicons"
+  ]
+}

@@ -7,4 +7,9 @@
 .env
 .nextflow
 work/
+results/
 .nextflow.log*
+.nf-test/
+.nf-test.log
+.nf-test-*.log
+tmp_runner
