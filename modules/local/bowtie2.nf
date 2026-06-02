@@ -1,5 +1,6 @@
 process BOWTIE2_BUILD {
     label 'process_medium'
+    conda "${projectDir}/env/bowtie2.yml"
 
     input:
     path(reference)
@@ -34,6 +35,7 @@ process BOWTIE2_BUILD {
 process BOWTIE2_ALIGN {
     tag "${meta.id}"
     label 'process_high'
+    conda "${projectDir}/env/bowtie2.yml"
 
     input:
     tuple val(meta), path(reads)

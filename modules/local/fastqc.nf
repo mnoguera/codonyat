@@ -1,6 +1,7 @@
 process FASTQC {
     tag "${meta.id}"
     label 'process_low'
+    conda "${projectDir}/env/fastqc.yml"
 
     input:
     tuple val(meta), path(reads)

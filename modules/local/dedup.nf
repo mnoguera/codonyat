@@ -1,6 +1,7 @@
 process PICARD_MARKDUPLICATES {
     tag "${meta.id}"
     label 'process_medium'
+    conda "${projectDir}/env/picard.yml"
 
     input:
     tuple val(meta), path(bam)

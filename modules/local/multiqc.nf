@@ -1,5 +1,6 @@
 process MULTIQC {
     label 'process_low'
+    conda "${projectDir}/env/multiqc.yml"
 
     input:
     path('*')

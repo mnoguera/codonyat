@@ -1,6 +1,7 @@
 process FASTP {
     tag "${meta.id}"
     label 'process_medium'
+    conda "${projectDir}/env/fastp.yml"
 
     input:
     tuple val(meta), path(reads)

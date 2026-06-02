@@ -1,6 +1,7 @@
 process SAMTOOLS_SORT {
     tag "${meta.id}"
     label 'process_medium'
+    conda "${projectDir}/env/samtools.yml"
 
     input:
     tuple val(meta), path(bam)
@@ -34,6 +35,7 @@ process SAMTOOLS_SORT {
 process SAMTOOLS_INDEX {
     tag "${meta.id}"
     label 'process_low'
+    conda "${projectDir}/env/samtools.yml"
 
     input:
     tuple val(meta), path(bam)
@@ -50,6 +52,7 @@ process SAMTOOLS_INDEX {
 process BAM_TO_SAM {
     tag "${meta.id}"
     label 'process_low'
+    conda "${projectDir}/env/samtools.yml"
 
     input:
     tuple val(meta), path(bam)

@@ -1,6 +1,7 @@
 process CODONYAT {
     tag "${meta.id}"
     label 'process_medium'
+    conda "${projectDir}/env/codonyat.yml"
 
     input:
     tuple val(meta), path(sam)
