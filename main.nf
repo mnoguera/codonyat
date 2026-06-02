@@ -19,6 +19,11 @@ include { CODONYAT                  } from './modules/local/codonyat'
 include { MULTIQC                   } from './modules/local/multiqc'
 
 workflow {
+    // Validate inputs before starting
+    Utils.validateSamplesheet(params.input)
+    Utils.validateInputFile(params.reference, "Reference FASTA")
+    Utils.validateInputFile(params.amplicons, "Amplicons TSV")
+
     // Parse samplesheet — resolve relative FASTQ paths against the samplesheet's directory
     def sheet = file(params.input)
     ch_input = Channel.fromPath(params.input, checkIfExists: true)
