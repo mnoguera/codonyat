@@ -9,8 +9,25 @@ process BOWTIE2_BUILD {
 
     script:
     """
+    # Validate input
+    if [ ! -f ${reference} ]; then
+        echo "ERROR: Reference file not found: ${reference}" >&2
+        exit 1
+    fi
+
+    # Build index
     mkdir -p bowtie2_index
-    bowtie2-build ${reference} bowtie2_index/reference
+    bowtie2-build ${reference} bowtie2_index/reference 2> build.log || {
+        echo "ERROR: bowtie2-build failed. Invalid FASTA format?" >&2
+        cat build.log >&2
+        exit 1
+    }
+
+    # Validate output
+    if [ ! -f bowtie2_index/reference.1.bt2 ]; then
+        echo "ERROR: Index build produced no output files" >&2
+        exit 1
+    fi
     """
 }
 
@@ -28,6 +45,13 @@ process BOWTIE2_ALIGN {
 
     script:
     """
+    # Validate index exists
+    if [ ! -f ${index}/reference.1.bt2 ]; then
+        echo "ERROR: Bowtie2 index not found in ${index}" >&2
+        exit 1
+    fi
+
+    # Run alignment
     bowtie2 \\
         ${params.bowtie2_args} \\
         -p ${task.cpus} \\
@@ -35,6 +59,16 @@ process BOWTIE2_ALIGN {
         ${reads.size() > 1 ? "-1 ${reads[0]} -2 ${reads[1]}" : "-U ${reads[0]}"} \\
         2> ${meta.id}_bowtie2.log \\
         | samtools view -@ ${task.cpus} -bS - \\
-        > ${meta.id}.bam
+        > ${meta.id}.bam || {
+        echo "ERROR: Bowtie2 alignment failed for ${meta.id}" >&2
+        cat ${meta.id}_bowtie2.log >&2
+        exit 1
+    }
+
+    # Check for alignments (warning only, not fatal)
+    NUM_ALIGNMENTS=\$(samtools view -c ${meta.id}.bam)
+    if [ "\$NUM_ALIGNMENTS" -eq 0 ]; then
+        echo "WARNING: Zero alignments for ${meta.id}. Wrong reference or corrupted reads?" >&2
+    fi
     """
 }
