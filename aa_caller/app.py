@@ -3,7 +3,7 @@
 Existing code that does ``from aa_caller.app import X`` continues to work.
 """
 
-from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER  # noqa: F401
+from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_PROTEIN, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER  # noqa: F401
 from .container import SamContainer  # noqa: F401
 from .genetic_code import GENETIC_CODE, codon_to_aminoacid  # noqa: F401
 from .models import Amplicon, Protein, Qual, Variant  # noqa: F401

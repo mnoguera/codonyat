@@ -4,17 +4,17 @@ import argparse
 import logging
 from pathlib import Path
 
-from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER
+from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_PROTEIN, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER
 from .container import SamContainer
 from .reference import FullReference
 from .validators import parse_amplicons, validate_amplicon_file, validate_reference_file, validate_sam_file
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
 def main() -> None:
     """Command-line entry point that wires inputs/key outputs together."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Standalone RT variant collector")
     parser.add_argument("sam_file", type=Path)
     parser.add_argument("reference_file", type=Path)
@@ -40,7 +40,7 @@ def main() -> None:
     parser.add_argument(
         "--protein",
         type=str,
-        default="RT",
+        default=DEFAULT_PROTEIN,
         help="Target protein name to analyze (default: RT).",
     )
     args = parser.parse_args()
