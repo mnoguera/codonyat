@@ -12,4 +12,4 @@ results/
 .nf-test/
 .nf-test.log
 .nf-test-*.log
-tmp_runner
+tmp_runner.patch_packaging.py
