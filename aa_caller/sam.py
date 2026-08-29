@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, Optional
+from typing import Dict
 
 from .models import Qual
+
+# Compiled once at module load — reused across every SamEntry instance.
+_CIGAR_RE = re.compile(r"(\d+)([MIDNSHP=X])")
 
 
 class SamEntry:
@@ -45,14 +48,14 @@ class SamEntry:
 
     def _compute_reference_covered_length(self) -> int:
         """Sum the CIGAR operations that consume reference bases to get coverage."""
-        ops = re.findall(r"(\d+)([MIDNSHP=X])", self.cigar)
+        ops = _CIGAR_RE.findall(self.cigar)
         total = 0
         for length, op in ops:
             if op in "MDN=X":
                 total += int(length)
         return total
 
-    def _build_ref_to_read_map(self) -> Dict[int, Optional[int]]:
+    def _build_ref_to_read_map(self) -> Dict[int, int | None]:
         """Walk the CIGAR string and build a mapping from reference positions to read positions.
 
         CIGAR operations:
@@ -62,8 +65,8 @@ class SamEntry:
         - S: consume query only (skip in reference mapping)
         - H/P: consume neither
         """
-        ref_to_read: Dict[int, Optional[int]] = {}
-        ops = re.findall(r"(\d+)([MIDNSHP=X])", self.cigar)
+        ref_to_read: Dict[int, int | None] = {}
+        ops = _CIGAR_RE.findall(self.cigar)
         ref_pos = self.coordinate
         read_pos = 0
         for length_str, op in ops:
@@ -95,7 +98,7 @@ class SamEntry:
         """Check whether this read spans the requested reference position."""
         return self.coordinate <= position <= self.coordinate + self._reference_covered_length - 1
 
-    def codon_at(self, position: int) -> Optional[str]:
+    def codon_at(self, position: int) -> str | None:
         """Return the codon at the given reference position using the CIGAR-aware mapping."""
         bases = []
         for offset in range(3):
@@ -106,8 +109,6 @@ class SamEntry:
             elif read_idx is None:
                 return None
             else:
-                if read_idx < 0 or read_idx >= len(self.sequence):
-                    return None
                 bases.append(self.sequence[read_idx])
         return "".join(bases)
 
