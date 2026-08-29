@@ -20,7 +20,9 @@ class FullReference:
 
     def _load_reference(self) -> None:
         """Populate the sequence and protein dictionary from the FASTA header."""
-        record = next(SeqIO.parse(str(self.path), "fasta"))
+        record = next(SeqIO.parse(str(self.path), "fasta"), None)
+        if record is None:
+            raise ValueError(f"Reference file {self.path} is empty or not valid FASTA")
         self.seq = str(record.seq).upper()
         self.id = record.id
         header_parts = record.description.split(";")
