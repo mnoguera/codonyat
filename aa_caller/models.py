@@ -160,7 +160,7 @@ class Qual:
         return self.quality_array[pos]
 
 
-@dataclass
+@dataclass(slots=True)
 class Protein:
     """Stores the coordinates and description of a protein annotated in the reference."""
     name: str
@@ -178,7 +178,7 @@ class Protein:
         return cls(name=name, description=desc, start_coordinate=int(start), end_coordinate=int(end))
 
 
-@dataclass
+@dataclass(slots=True)
 class Amplicon:
     """Captures metadata for each configured amplicon used in the pipeline."""
     label: str
@@ -207,7 +207,7 @@ class Amplicon:
         )
 
 
-@dataclass
+@dataclass(slots=True)
 class Variant:
     """Tracks counts and strand-aware details for every codon observed at a position."""
     codon: str
