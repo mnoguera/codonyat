@@ -1,5 +1,6 @@
-__all__ = ["SamEntry"]
 from __future__ import annotations
+
+__all__ = ["SamEntry"]
 
 import re
 from typing import Dict
