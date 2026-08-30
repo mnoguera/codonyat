@@ -1,3 +1,4 @@
+__all__ = ["SamEntry"]
 from __future__ import annotations
 
 import re
