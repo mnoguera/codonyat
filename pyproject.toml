@@ -28,6 +28,9 @@ include = ["aa_caller*"]
 
 [project.urls]
 "Source" = "https://github.com/mnoguera/codonyat"
+"Documentation" = "https://mnoguera.github.io/codonyat/"
+"Issues" = "https://github.com/mnoguera/codonyat/issues"
+"Nextflow pipeline (nf-codonyat)" = "https://github.com/sjoclaudi/nf-codonyat"
 
 [project.scripts]
 codonyat = "aa_caller.cli:main"
@@ -35,7 +38,9 @@ codonyat-runner = "aa_caller.runner:runner_cli"
 
 [project.optional-dependencies]
 dev = [
+    "build",
     "pytest",
+    "pytest-cov",
     "ruff",
     "twine",
 ]

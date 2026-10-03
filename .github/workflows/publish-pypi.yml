@@ -1,76 +1,60 @@
 name: Publish Python package to PyPI
 
+# Runs only when a GitHub release is published (e.g. tag v1.0.3).
+# The version comes from pyproject.toml; nothing is bumped or pushed here.
 on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
+  release:
+    types: [published]
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 jobs:
-  publish:
-    if: github.event.pull_request.merged == true
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
+      - uses: actions/checkout@v7
 
-      - name: Bump patch version
-        id: bump
-        run: |
-          python - <<'PY'
-          import os
-          import re
-          from pathlib import Path
-
-          pyproject = Path("pyproject.toml")
-          text = pyproject.read_text(encoding="utf-8")
-          match = re.search(r'^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"\s*$', text, re.MULTILINE)
-          if not match:
-              raise SystemExit("Could not find a SemVer version in pyproject.toml")
-
-          major, minor, patch = map(int, match.groups())
-          new_version = f"{major}.{minor}.{patch + 1}"
-          updated = re.sub(
-              r'^version\s*=\s*"\d+\.\d+\.\d+"\s*$',
-              f'version = "{new_version}"',
-              text,
-              count=1,
-              flags=re.MULTILINE,
-          )
-          pyproject.write_text(updated, encoding="utf-8")
-
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f"new_version={new_version}\n")
-
-          print(f"Bumped version to {new_version}")
-          PY
-
-      - name: Commit and push version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml
-          git commit -m "chore(release): bump version to ${{ steps.bump.outputs.new_version }}"
-          git push origin HEAD:main
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
 
-      - name: Build distributions
+      - name: Check the release tag matches the package version
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install build
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "pyproject version: $VERSION, release tag: $GITHUB_REF_NAME"
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::Release tag ${GITHUB_REF_NAME} does not match version ${VERSION} in pyproject.toml"
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
           python -m build
 
-      - name: Publish package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: twine check
+        run: twine check --strict dist/*
+
+      - uses: actions/upload-artifact@v7
         with:
-          skip-existing: true
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/codonyat/
+    permissions:
+      id-token: write   # PyPI trusted publishing
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

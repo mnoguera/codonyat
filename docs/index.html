@@ -112,22 +112,6 @@
       font-size: 0.85rem;
     }
 
-    .pipeline-flow {
-      background: #0a1520;
-      border: 1px solid rgba(127, 226, 255, 0.15);
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-      font-family: "JetBrains Mono", "Fira Code", monospace;
-      font-size: 0.88rem;
-      line-height: 1.8;
-      color: #94d2ff;
-      overflow-x: auto;
-      margin: 0.8rem 0 1.2rem;
-    }
-
-    .pipeline-flow .arrow { color: rgba(228, 228, 245, 0.4); }
-    .pipeline-flow .optional { color: rgba(228, 228, 245, 0.5); font-style: italic; }
-
     footer {
       text-align: center;
       color: rgba(228, 228, 245, 0.65);
@@ -150,10 +134,11 @@
       <h1>codon-yat</h1>
       <p>
         A codon-aware amino acid variant typer from SAM alignments of viral NGS data.
-        Standalone Python package and Nextflow pipeline for end-to-end amplicon variant analysis.
+        A Python package for codon-level amino acid variant calling from viral amplicon sequencing.
       </p>
       <p>
-        <a href="https://github.com/mnoguera/codonyat">GitHub repository</a>
+        <a href="https://github.com/mnoguera/codonyat">GitHub repository</a> &middot;
+        <a href="https://pypi.org/project/codonyat/">PyPI</a>
       </p>
     </section>
 
@@ -166,98 +151,26 @@
         <li>TSV/XML output compatible with legacy Perl diagnostics, plus Python objects for downstream tooling.</li>
         <li>Validates all inputs before parsing &mdash; malformed SAM/FASTA/amplicon data fails fast.</li>
         <li>Configurable target protein via <code>--protein</code> (defaults to RT).</li>
-        <li>Complete Nextflow DSL2 pipeline with QC, trimming, decontamination, alignment, and optional dedup.</li>
       </ul>
     </section>
 
-    <!-- Nextflow pipeline -->
+    <!-- Installation -->
     <section class="card">
-      <h2>Nextflow pipeline</h2>
-      <p>The repository includes a production-ready Nextflow DSL2 pipeline wrapping codonyat with upstream processing.</p>
-
-      <div class="pipeline-flow">
-        FASTQ <span class="arrow">&rarr;</span> FastQC <span class="arrow">&rarr;</span> fastp <span class="arrow">&rarr;</span> FastQC
-        <span class="arrow">&rarr;</span> bowtie2 <span class="arrow">&rarr;</span> samtools sort
-        <span class="arrow">&rarr;</span> <span class="optional">[Picard dedup]</span>
-        <span class="arrow">&rarr;</span> codonyat <span class="arrow">&rarr;</span> MultiQC
-      </div>
-
-      <table>
-        <thead>
-          <tr><th>Step</th><th>Tool</th><th>Purpose</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Quality control</td><td>FastQC</td><td>Per-read QC on raw and trimmed reads</td></tr>
-          <tr><td>Trimming</td><td>fastp</td><td>Adapter removal, quality and length filtering</td></tr>
-          <tr><td>Decontamination</td><td>bowtie2 <code>--no-unal</code></td><td>Drops non-reference reads during alignment</td></tr>
-          <tr><td>Alignment</td><td>bowtie2 <code>--very-sensitive-local</code></td><td>Sensitive local alignment for diverse viral populations</td></tr>
-          <tr><td>Sorting</td><td>samtools sort</td><td>Coordinate-sorted BAM</td></tr>
-          <tr><td>Deduplication</td><td>Picard MarkDuplicates</td><td>Optional (off by default for amplicon data)</td></tr>
-          <tr><td>Variant calling</td><td>codonyat</td><td>Codon-aware amino acid variant typing</td></tr>
-          <tr><td>Reporting</td><td>MultiQC</td><td>Aggregated QC report across all samples</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Quick start</h3>
-      <pre><code># Build the codonyat container
-docker build -t codonyat:latest .
-
-# Run with your data
-nextflow run . -profile docker \
-    --input samplesheet.csv \
-    --reference data/HXB2R.fasta \
-    --amplicons data/amplicons.tsv
-
-# Run with bundled test data
-nextflow run . -profile docker,test</code></pre>
-
-      <h3>Samplesheet format</h3>
-      <p>A CSV file with columns <code>sample_id</code>, <code>fastq_1</code>, and <code>fastq_2</code> (leave <code>fastq_2</code> empty for single-end):</p>
-      <pre><code>sample_id,fastq_1,fastq_2
-sample1,/path/to/sample1_R1.fastq.gz,/path/to/sample1_R2.fastq.gz
-sample2,/path/to/sample2_R1.fastq.gz,</code></pre>
-
-      <h3>Pipeline parameters</h3>
-      <table>
-        <thead>
-          <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>--input</code></td><td>required</td><td>Samplesheet CSV</td></tr>
-          <tr><td><code>--reference</code></td><td>required</td><td>FASTA reference with protein annotations</td></tr>
-          <tr><td><code>--amplicons</code></td><td>required</td><td>Amplicon definitions TSV</td></tr>
-          <tr><td><code>--protein</code></td><td><code>RT</code></td><td>Target protein for variant calling</td></tr>
-          <tr><td><code>--outdir</code></td><td><code>./results</code></td><td>Output directory</td></tr>
-          <tr><td><code>--skip_dedup</code></td><td><code>true</code></td><td>Skip deduplication (default for amplicon data)</td></tr>
-          <tr><td><code>--skip_fastqc</code></td><td><code>false</code></td><td>Skip FastQC steps</td></tr>
-          <tr><td><code>--bowtie2_args</code></td><td><code>--very-sensitive-local --no-unal</code></td><td>bowtie2 alignment flags</td></tr>
-          <tr><td><code>--fastp_args</code></td><td><code>--qualified_quality_phred 20 ...</code></td><td>fastp trimming flags</td></tr>
-          <tr><td><code>--ratio_upper</code></td><td><code>3.162</code></td><td>Upper strand-ratio bound</td></tr>
-          <tr><td><code>--ratio_lower</code></td><td><code>0.316</code></td><td>Lower strand-ratio bound</td></tr>
-          <tr><td><code>--entropy_threshold</code></td><td><code>0.0</code></td><td>Minimum Shannon entropy</td></tr>
-        </tbody>
-      </table>
-
-      <h3>Profiles</h3>
-      <table>
-        <thead>
-          <tr><th>Profile</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>docker</code></td><td>Run with Docker containers</td></tr>
-          <tr><td><code>singularity</code></td><td>Run with Singularity containers</td></tr>
-          <tr><td><code>test</code></td><td>Use bundled test data from <code>data/</code></td></tr>
-        </tbody>
-      </table>
+      <h2>Installation</h2>
+      <pre><code>pip install codonyat</code></pre>
+      <p>Requires Python 3.10 or newer; the only runtime dependency is Biopython.</p>
+      <p>
+        This project is the Python package only. To run codonyat on many samples, from FASTQ or SAM,
+        with read QC, trimming, alignment and a merged report, use the separate Nextflow pipeline
+        <a href="https://github.com/sjoclaudi/nf-codonyat">nf-codonyat</a>, which installs this package from PyPI.
+      </p>
     </section>
 
     <!-- Python CLI -->
     <section class="card">
       <h2>CLI usage</h2>
       <p>Install the package and run the variant caller directly on a SAM file:</p>
-      <pre><code>pip install .
-
-codonyat sample.sam reference.fasta amplicons.tsv \
+      <pre><code>codonyat sample.sam reference.fasta amplicons.tsv \
     --protein RT \
     --ratio-upper 3.16 \
     --entropy-threshold 0.5</code></pre>
@@ -281,7 +194,7 @@ TGGAAGGGCTAATTCACTCCCAACGAAGAC...</code></pre>
       <h2>Package API</h2>
       <p>Import the core objects for tighter integration:</p>
       <pre><code>from aa_caller import SamContainer, FullReference, parse_amplicons</code></pre>
-      <p>Use <code>call_variants</code> to run the full pipeline from Python:</p>
+      <p>Use <code>call_variants</code> to run variant calling from Python:</p>
       <pre><code>from pathlib import Path
 from aa_caller import call_variants
 
@@ -318,7 +231,8 @@ call_variants_from_args(args)</code></pre>
 pip install -e .[dev]</code></pre>
       <p>Run the checks that execute in <a href="https://github.com/mnoguera/codonyat/blob/main/.github/workflows/python-tests.yml">CI</a>:</p>
       <pre><code>ruff check .
-python -m pytest</code></pre>
+python -m pytest
+python -m build &amp;&amp; twine check dist/*</code></pre>
     </section>
 
     <!-- Project structure -->
@@ -335,13 +249,8 @@ python -m pytest</code></pre>
 &#9474;   &#9500;&#9472;&#9472; validators.py     # Input file validation
 &#9474;   &#9500;&#9472;&#9472; genetic_code.py   # Codon translation table
 &#9474;   &#9492;&#9472;&#9472; constants.py      # Default thresholds
-&#9500;&#9472;&#9472; modules/local/        # Nextflow process modules
-&#9500;&#9472;&#9472; conf/                 # Nextflow resource config
-&#9500;&#9472;&#9472; data/                 # Test data (HXB2R, amplicons, SAM)
 &#9500;&#9472;&#9472; tests/                # pytest suite (unit + integration)
-&#9500;&#9472;&#9472; main.nf               # Nextflow pipeline entry
-&#9500;&#9472;&#9472; nextflow.config       # Pipeline parameters and profiles
-&#9500;&#9472;&#9472; Dockerfile            # Container build
+&#9500;&#9472;&#9472; docs/index.html       # This page
 &#9492;&#9472;&#9472; pyproject.toml        # Python package metadata</code></pre>
     </section>
 

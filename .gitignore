@@ -1,15 +1,18 @@
-.devcontainer/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.env
+
+# Tooling
 .pytest_cache/
 .ruff_cache/
-.venv/
-*/__pycache__/*
-*.egg-info/
-.env
-.nextflow
-work/
-results/
-.nextflow.log*
-.nf-test/
-.nf-test.log
-.nf-test-*.log
-tmp_runner.patch_packaging.py
+.coverage
+coverage.xml
+.devcontainer/
+
+# OS
+.DS_Store
