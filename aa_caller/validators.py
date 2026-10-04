@@ -7,28 +7,34 @@ from typing import Dict
 from Bio import SeqIO
 
 from .models import Amplicon
+from .sam import iter_sam_lines
 
 
 def validate_sam_file(path: Path) -> None:
-    """Perform a lightweight sanity check on the SAM file before parsing."""
-    with open(path, "r") as fh:
-        for line in fh:
-            if line.startswith("@"):
-                continue
-            fields = line.strip().split("\t")
-            if len(fields) < 11 or not fields[0] or not fields[3].isdigit():
-                raise ValueError(f"SAM file {path} looks malformed: {line.strip()}")
-            return
-        raise ValueError(f"SAM file {path} contains no alignment entries")
+    """Perform a lightweight sanity check on the first alignment record (SAM, SAM.gz or BAM)."""
+    for line in iter_sam_lines(path):
+        fields = line.strip().split("\t")
+        if len(fields) < 11 or not fields[0] or not fields[3].isdigit():
+            raise ValueError(f"SAM file {path} looks malformed: {line.strip()}")
+        return
+    raise ValueError(f"SAM file {path} contains no alignment entries")
 
 
 def validate_reference_file(path: Path, *, protein_name: str = "RT") -> None:
-    """Ensure the reference FASTA carries the protein metadata that parsing needs."""
+    """Ensure the reference FASTA carries the protein metadata that parsing needs.
+
+    ``protein_name`` may be one name, a comma-separated list, or ``all``
+    (which only requires the FASTA to be readable).
+    """
     record = next(SeqIO.parse(str(path), "fasta"), None)
     if record is None:
         raise ValueError(f"Reference file {path} is empty or not FASTA")
-    if protein_name not in record.description:
-        raise ValueError(f"Reference {path} header is missing an {protein_name} protein annotation")
+    for name in protein_name.split(","):
+        name = name.strip()
+        if not name or name.lower() == "all":
+            continue
+        if name not in record.description:
+            raise ValueError(f"Reference {path} header is missing an {name} protein annotation")
 
 
 def validate_amplicon_file(path: Path) -> None:
