@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codonyat"
-version = "1.0.3"
+version = "1.1.0"
 description = "codon-yat — A codon-aware (Yet Another) amino acid variant typer from SAM alignments of viral NGS data."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,8 +37,12 @@ codonyat = "aa_caller.cli:main"
 codonyat-runner = "aa_caller.runner:runner_cli"
 
 [project.optional-dependencies]
+bam = [
+    "pysam>=0.22",
+]
 dev = [
     "build",
+    "pysam>=0.22",
     "pytest",
     "pytest-cov",
     "ruff",
