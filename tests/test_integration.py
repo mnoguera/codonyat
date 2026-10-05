@@ -303,7 +303,9 @@ class TestRunnerAPI:
         assert result.xml_path == xml_out
         assert csv_out.exists()
         assert xml_out.exists()
-        assert len(result.container.reads) == 8
+        # 1.1.0: records are streamed, not kept in memory
+        assert result.container.reads == []
+        assert result.container.mapped_records == 8
         assert "Amp_1" in result.amplicons
 
     def test_call_variants_from_args_with_namespace(self, tmp_path: Path) -> None:

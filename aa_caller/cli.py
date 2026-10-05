@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_PROTEIN, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER
 from .container import SamContainer
-from .reference import FullReference
+from .reference import FullReference, parse_protein_spec, resolve_proteins
 from .validators import parse_amplicons, validate_amplicon_file, validate_reference_file, validate_sam_file
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     """Command-line entry point that wires inputs/key outputs together."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    parser = argparse.ArgumentParser(description="Standalone RT variant collector")
+    parser = argparse.ArgumentParser(
+        description="Codon-aware amino-acid variant typer for viral NGS alignments (SAM, SAM.gz or BAM)"
+    )
     parser.add_argument("sam_file", type=Path)
     parser.add_argument("reference_file", type=Path)
     parser.add_argument("amplicons_file", type=Path)
@@ -41,7 +43,11 @@ def main() -> None:
         "--protein",
         type=str,
         default=DEFAULT_PROTEIN,
-        help="Target protein name to analyze (default: RT).",
+        help=(
+            "Protein(s) to analyze: one name (default: RT), a comma-separated list "
+            "(e.g. PR,RT,INT; all counted in one pass over the SAM) or 'all' for "
+            "every protein annotated in the reference header."
+        ),
     )
     args = parser.parse_args()
 
@@ -54,6 +60,10 @@ def main() -> None:
 
     logger.info("Validating input formats before parsing")
     validate_sam_file(args.sam_file)
+    try:
+        parse_protein_spec(args.protein)
+    except ValueError as exc:
+        parser.error(str(exc))
     validate_reference_file(args.reference_file, protein_name=args.protein)
     validate_amplicon_file(args.amplicons_file)
 
@@ -61,26 +71,32 @@ def main() -> None:
     parse_amplicons(args.amplicons_file)
 
     logger.info("Loading reference")
-    # reference contains the RT protein coordinates used for variant calling
+    # reference contains the protein coordinates used for variant calling
     reference = FullReference(args.reference_file)
+    try:
+        proteins = resolve_proteins(args.protein, reference)
+    except ValueError as exc:
+        parser.error(str(exc))
 
-    logger.info("Parsing SAM entries")
-    # load every mapped read from the SAM file into the working buffer
     container = SamContainer(
         args.sam_file,
         ratio_upper=args.ratio_upper,
         ratio_lower=args.ratio_lower,
         entropy_threshold=args.entropy_threshold,
     )
-    container.load()
-
-    logger.info("Calculating %s variant frequencies", args.protein)
-    container.calculate_variant_frequencies(args.protein, reference)
+    # records are streamed: memory does not grow with the number of alignments
+    logger.info("Streaming alignments and counting codons for %s", ",".join(proteins))
+    container.calculate_variant_frequencies_multi(proteins, reference)
 
     csv_path = args.sam_file.with_suffix(args.sam_file.suffix + ".tsv")
     xml_path = args.sam_file.with_suffix(args.sam_file.suffix + ".xml")
     logger.info("Writing TSV results")
     # final exports mirror the Perl output format consumed by downstream workflows
-    container.write_csv(str(args.sam_file), reference, csv_path, protein_name=args.protein)
-    logger.info("Writing XML dump")
-    container.write_xml(str(args.sam_file), reference, xml_path)
+    if len(proteins) == 1:
+        container.write_csv(str(args.sam_file), reference, csv_path, protein_name=proteins[0])
+        logger.info("Writing XML dump")
+        container.write_xml(str(args.sam_file), reference, xml_path)
+    else:
+        container.write_csv_proteins(str(args.sam_file), reference, csv_path, proteins)
+        logger.info("Writing XML dump")
+        container.write_xml_proteins(str(args.sam_file), reference, xml_path, proteins)

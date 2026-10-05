@@ -43,7 +43,7 @@ codonyat sample.sam reference.fasta amplicons.tsv
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--protein` | `RT` | Target protein name (must match a FASTA header annotation) |
+| `--protein` | `RT` | Protein(s) to analyse: one name, a comma-separated list (e.g. `PR,RT,INT`, counted in a single pass) or `all` (every protein annotated in the reference header). Names must match the FASTA header annotations |
 | `--ratio-upper` | `3.162` | Upper bound for strand-ratio balancing |
 | `--ratio-lower` | `0.316` | Lower bound for strand-ratio balancing |
 | `--entropy-threshold` | `0.0` | Minimum Shannon entropy to mark a position as diverse |
@@ -54,6 +54,12 @@ The CLI writes two files alongside the input SAM:
 
 - `[sam-file].tsv` — columns: FILE, REFERENCE, PROTEIN, VARIANT, POSITION, FREQ, FWCOV, RVCOV, TOTALCOV, RATIO
 - `[sam-file].xml` — per-position `<Depth>`, `<FwCover>`, `<RvCover>`, `<Variants>`
+
+With several proteins, the TSV has one header followed by each protein's rows (in the order requested), and the XML wraps each protein's positions in a `<Protein name="...">` element. Single-protein output is unchanged.
+
+### Input and memory
+
+The input can be SAM, gzip-compressed SAM (`.sam.gz`) or BAM (`.bam`; install the optional extra with `pip install 'codonyat[bam]'`). Records are streamed, so peak memory does not depend on the number of alignments: about 80–110 MB for 1 million alignments (see [benchmarks/README.md](benchmarks/README.md)).
 
 ### Reference FASTA format
 
@@ -147,7 +153,9 @@ codonyat/
 │   ├── validators.py     # Input file validation
 │   ├── genetic_code.py   # Codon translation table
 │   └── constants.py      # Default thresholds
-├── tests/                # pytest suite (unit + integration)
+├── tests/                # pytest suite (unit, integration, 1.0.3 regression fixtures)
+├── benchmarks/           # synthetic SAM generator and memory benchmark notes (dev only)
+├── CHANGELOG.md
 ├── docs/index.html       # Project page (GitHub Pages)
 └── pyproject.toml        # Package metadata
 ```

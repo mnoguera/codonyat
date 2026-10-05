@@ -1,12 +1,12 @@
 from argparse import Namespace, ArgumentParser
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Mapping
+from typing import Any, Dict, List, Mapping, Sequence
 
 from .constants import DEFAULT_ENTROPY_THRESHOLD, DEFAULT_RATIO_LOWER, DEFAULT_RATIO_UPPER
 from .container import SamContainer
 from .models import Amplicon
-from .reference import FullReference
+from .reference import FullReference, resolve_proteins
 from .validators import parse_amplicons, validate_amplicon_file, validate_reference_file, validate_sam_file
 
 
@@ -19,6 +19,7 @@ class VariantCallResult:
     container: SamContainer
     reference: FullReference
     amplicons: Dict[str, Amplicon]
+    proteins: List[str] = field(default_factory=list)
 
 
 def call_variants(
@@ -29,18 +30,25 @@ def call_variants(
     ratio_upper: float = DEFAULT_RATIO_UPPER,
     ratio_lower: float = DEFAULT_RATIO_LOWER,
     entropy_threshold: float = DEFAULT_ENTROPY_THRESHOLD,
-    protein: str = "RT",
+    protein: str | Sequence[str] = "RT",
     csv_path: Path | str | None = None,
     xml_path: Path | str | None = None,
 ) -> VariantCallResult:
-    """Run the codon-level pipeline and return the generated artifacts."""
+    """Run the codon-level pipeline and return the generated artifacts.
+
+    ``protein`` is one name, a comma-separated string or list of names, or
+    ``"all"``. Several proteins are counted in a single streaming pass; their
+    rows share one TSV (and one XML with a ``<Protein>`` element per protein).
+    A single protein produces exactly the same files as before.
+    """
 
     sam_path = Path(sam_path)
     reference_path = Path(reference_path)
     amplicons_path = Path(amplicons_path)
 
     validate_sam_file(sam_path)
-    validate_reference_file(reference_path, protein_name=protein)
+    protein_spec = protein if isinstance(protein, str) else ",".join(protein)
+    validate_reference_file(reference_path, protein_name=protein_spec)
     validate_amplicon_file(amplicons_path)
 
     amplicons = parse_amplicons(amplicons_path)
@@ -51,14 +59,18 @@ def call_variants(
         ratio_lower=ratio_lower,
         entropy_threshold=entropy_threshold,
     )
-    container.load()
-    container.calculate_variant_frequencies(protein, reference)
+    proteins = resolve_proteins(protein_spec, reference)
+    container.calculate_variant_frequencies_multi(proteins, reference)
 
     csv_path = Path(csv_path) if csv_path else sam_path.with_suffix(sam_path.suffix + ".tsv")
     xml_path = Path(xml_path) if xml_path else sam_path.with_suffix(sam_path.suffix + ".xml")
 
-    container.write_csv(str(sam_path), reference, csv_path, protein_name=protein)
-    container.write_xml(str(sam_path), reference, xml_path)
+    if len(proteins) == 1:
+        container.write_csv(str(sam_path), reference, csv_path, protein_name=proteins[0])
+        container.write_xml(str(sam_path), reference, xml_path)
+    else:
+        container.write_csv_proteins(str(sam_path), reference, csv_path, proteins)
+        container.write_xml_proteins(str(sam_path), reference, xml_path, proteins)
 
     return VariantCallResult(
         csv_path=csv_path,
@@ -66,12 +78,13 @@ def call_variants(
         container=container,
         reference=reference,
         amplicons=amplicons,
+        proteins=proteins,
     )
 
 
 def call_variants_from_args(
     args: Namespace | Mapping[str, Any], *, ratio_upper: float | None = None, ratio_lower: float | None = None, entropy_threshold: float | None = None,
-    protein: str | None = None,
+    protein: str | Sequence[str] | None = None,
     csv_path: Path | str | None = None,
     xml_path: Path | str | None = None,
 ) -> VariantCallResult:
@@ -115,13 +128,13 @@ def runner_cli() -> None:
     """Simple CLI that forwards parsed arguments to `call_variants_from_args`."""
 
     parser = ArgumentParser(description="Run the codonyat variant caller from Python")
-    parser.add_argument("sam_file", type=Path, help="Path to the input SAM file")
+    parser.add_argument("sam_file", type=Path, help="Path to the input SAM, SAM.gz or BAM file")
     parser.add_argument("reference_file", type=Path, help="FASTA reference with RT annotations")
     parser.add_argument("amplicons_file", type=Path, help="Amplicon TSV/CSV describing primers")
     parser.add_argument("--ratio-upper", type=float, default=DEFAULT_RATIO_UPPER, help="Upper bound for strand balance")
     parser.add_argument("--ratio-lower", type=float, default=DEFAULT_RATIO_LOWER, help="Lower bound for strand balance")
     parser.add_argument("--entropy-threshold", type=float, default=DEFAULT_ENTROPY_THRESHOLD, help="Minimum entropy to mark a position")
-    parser.add_argument("--protein", type=str, default="RT", help="Target protein name to analyze (default: RT)")
+    parser.add_argument("--protein", type=str, default="RT", help="Protein(s): one name (default: RT), a comma-separated list, or 'all'")
     parser.add_argument("--csv-path", type=Path, help="Override the TSV output path")
     parser.add_argument("--xml-path", type=Path, help="Override the XML output path")
 

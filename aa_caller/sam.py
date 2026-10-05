@@ -1,14 +1,46 @@
 from __future__ import annotations
 
-__all__ = ["SamEntry"]
+__all__ = ["SamEntry", "iter_sam_lines"]
 
+import gzip
 import re
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Dict
 
 from .models import Qual
 
 # Compiled once at module load — reused across every SamEntry instance.
 _CIGAR_RE = re.compile(r"(\d+)([MIDNSHP=X])")
+
+
+def iter_sam_lines(path: Path | str) -> Iterator[str]:
+    """Yield alignment records (header lines skipped) one at a time, as SAM text.
+
+    Plain SAM and gzip-compressed SAM (``.gz``) are read directly. BAM/CRAM
+    files (``.bam``/``.cram``) are read through the optional ``pysam``
+    dependency (``pip install codonyat[bam]``); each record is converted back
+    to its SAM text so it is parsed exactly like a SAM line.
+    """
+    path = Path(path)
+    suffix = path.suffix.lower()
+    if suffix == ".bam":
+        try:
+            import pysam  # type: ignore[import-not-found]
+        except ImportError as exc:  # pragma: no cover - depends on optional extra
+            raise RuntimeError(
+                f"Reading {path.name} needs pysam: pip install 'codonyat[bam]'"
+            ) from exc
+        with pysam.AlignmentFile(str(path), "rb", check_sq=False) as handle:
+            for record in handle.fetch(until_eof=True):
+                yield record.to_string()
+        return
+    opener = gzip.open if suffix == ".gz" else open
+    with opener(path, "rt") as fh:
+        for line in fh:
+            if line.startswith("@"):
+                continue
+            yield line
 
 
 class SamEntry:
